@@ -18,6 +18,44 @@
     localStorage.setItem("theme", next);
   });
 
+  /* Marquee: clone the sequence until it's wide enough that the
+     -50% loop never runs out of content, even on ultra-wide screens */
+  function setupMarquee() {
+    var track = document.getElementById("marqueeTrack");
+    if (!track) return;
+    var original = track.querySelector(".marquee-seq");
+    if (!original) return;
+
+    function build() {
+      var seqWidth = original.getBoundingClientRect().width;
+      if (!seqWidth) {
+        track.classList.add("is-ready");
+        return;
+      }
+      var targetHalfWidth = Math.max(window.innerWidth, screen.width || 0) * 2;
+      var copies = Math.max(1, Math.ceil(targetHalfWidth / seqWidth));
+      for (var i = 1; i < copies; i++) {
+        track.appendChild(original.cloneNode(true));
+      }
+      var halfChildren = Array.prototype.slice.call(track.children);
+      halfChildren.forEach(function (node) {
+        track.appendChild(node.cloneNode(true));
+      });
+
+      var halfWidth = copies * seqWidth;
+      var pxPerSecond = 45;
+      track.style.animationDuration = (halfWidth / pxPerSecond) + "s";
+      track.classList.add("is-ready");
+    }
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(build).catch(build);
+    } else {
+      build();
+    }
+  }
+  setupMarquee();
+
   /* Dot navigation */
   var sections = Array.prototype.slice.call(document.querySelectorAll("main .section[id]"));
   var dotnav = document.getElementById("dotnav");
